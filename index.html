@@ -20,7 +20,11 @@ h1{font-size:1.4rem;margin:0 0 4px}
 label{display:block;font-size:.9rem;color:var(--mute);margin-bottom:4px}
 .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .field{margin-bottom:14px}
+.field[hidden]{display:none}
+.hint{font-size:.8rem;color:var(--mute);margin:4px 0 0}
 input,select{width:100%;font:inherit;font-size:1.1rem;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)}
+input::placeholder{color:var(--mute);opacity:.75}
+select.unset{color:var(--mute)}
 input:focus-visible,button:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .verdict{font-size:1.5rem;font-weight:700;margin:0}
 .big{font-size:2.4rem;font-weight:700;line-height:1.1;margin:6px 0 2px}
@@ -32,6 +36,7 @@ dl{display:grid;grid-template-columns:1fr auto;gap:6px 12px;margin:16px 0 0}
 dt{color:var(--mute)}dd{margin:0;font-weight:600;text-align:right}
 .refs{font-size:.85rem;color:var(--mute);margin:14px 0 0;padding-top:12px;border-top:1px solid var(--line)}
 button{font:inherit;cursor:pointer;border-radius:8px;border:1px solid var(--accent);background:var(--accent);color:var(--card);padding:10px 16px;font-weight:600}
+button:disabled{opacity:.45;cursor:not-allowed}
 button.ghost{background:transparent;color:var(--mute);border-color:var(--line);padding:4px 10px;font-weight:400}
 .cupset{display:flex;align-items:center;gap:10px;margin:10px 0 0}
 .cupset label{margin:0;white-space:nowrap}
@@ -42,13 +47,15 @@ button.ghost{background:transparent;color:var(--mute);border-color:var(--line);p
 .note{font-size:.85rem;color:var(--mute);margin:8px 0 0}
 .msg{font-size:.88rem;color:var(--bad);margin:8px 0 0}
 ol{list-style:none;margin:12px 0 0;padding:0}
-li{display:grid;grid-template-columns:1fr auto;gap:4px 10px;align-items:center;padding:10px 0;border-top:1px solid var(--line)}
+li{display:grid;grid-template-columns:1fr auto;gap:4px 10px;align-items:start;padding:12px 0;border-top:1px solid var(--line)}
 li .nm{font-weight:600;overflow-wrap:anywhere}
 li .meta{font-size:.82rem;color:var(--mute)}
-.stats{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:4px 14px;font-size:.88rem;align-items:baseline}
-.stats .v{font-weight:700}
-li.best .v{color:var(--good)}
-.lv{font-weight:600;font-size:.85rem;white-space:nowrap}
+.stats{grid-column:1/-1;display:grid;grid-template-columns:repeat(3,1fr);gap:4px 10px;font-size:.85rem;margin-top:4px}
+.stats div{background:var(--bg);border-radius:8px;padding:6px 8px}
+.stats .k{display:block;font-size:.75rem;color:var(--mute)}
+.stats .v{font-weight:700;font-size:1rem}
+li.best .disc .v{color:var(--good)}
+.lv{font-weight:700}
 .empty{color:var(--mute);font-size:.9rem;margin:10px 0 0}
 dialog{border:1px solid var(--line);border-radius:14px;background:var(--card);color:var(--ink);padding:20px;width:min(92vw,420px)}
 dialog::backdrop{background:rgba(0,0,0,.45)}
@@ -63,28 +70,37 @@ dialog h2{font-size:1.1rem;margin:0 0 4px}
 <main>
 <header>
   <div><h1>高蛋白 CP 值計算器</h1>
-  <p class="sub">輸入份數、每份蛋白質和價格，算出每 1 元能買到幾 g 蛋白質。</p></div>
+  <p class="sub">輸入份數、每份蛋白質、原價和折扣券，算出每 1 元能買到幾 g 蛋白質。</p></div>
   <button class="gear" id="gear" type="button" aria-label="進階設定" title="進階設定"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
 </header>
 
 <section class="card" aria-label="輸入">
-  <div class="field"><label for="name">品名（選填，加入比較時使用）</label><input id="name" type="text" placeholder="例如 Tryall 巧克力"></div>
-  <div class="field"><label for="cat">分類</label><select id="cat"><option value="豆漿">豆漿</option><option value="濃縮乳清" selected>濃縮乳清</option><option value="分離乳清">分離乳清</option><option value="水解乳清">水解乳清</option></select></div>
+  <div class="field"><label for="name">品名</label><input id="name" type="text" placeholder="(例如 Tryall 巧克力)"></div>
   <div class="row">
-    <div class="field"><label for="n">總份數</label><input id="n" type="number" inputmode="decimal" min="0" step="any" placeholder="20"></div>
-    <div class="field"><label for="p">每份蛋白質（g）</label><input id="p" type="number" inputmode="decimal" min="0" step="any" placeholder="18"></div>
+    <div class="field"><label for="cat">分類</label><select id="cat"><option value="豆漿">豆漿</option><option value="濃縮乳清" selected>濃縮乳清</option><option value="分離乳清">分離乳清</option><option value="水解乳清">水解乳清</option></select></div>
+    <div class="field"><label for="place">購買位置</label><select id="place" class="unset"><option value="" selected disabled>(請選擇)</option><option value="蝦皮">蝦皮</option><option value="momo">momo</option><option value="酷澎">酷澎</option><option value="全聯">全聯</option><option value="Costco">Costco</option><option value="其他">其他</option></select></div>
   </div>
-  <div class="field"><label for="price">一包價格（元）</label><input id="price" type="number" inputmode="decimal" min="0" step="any" placeholder="333"></div>
+  <div class="field" id="placeOtherF" hidden><label for="placeOther">其他購買位置</label><input id="placeOther" type="text" maxlength="20" placeholder="(例如 家樂福、官網)"></div>
+  <div class="row">
+    <div class="field"><label for="n">總份數</label><input id="n" type="number" inputmode="decimal" min="0" step="any" placeholder="(20)"></div>
+    <div class="field"><label for="p">每份蛋白質（g）</label><input id="p" type="number" inputmode="decimal" min="0" step="any" placeholder="(18)"></div>
+  </div>
+  <div class="row">
+    <div class="field"><label for="price">一包價格（元）</label><input id="price" type="number" inputmode="decimal" min="0" step="any" placeholder="(333)"><p class="hint">請填原價，不扣折扣</p></div>
+    <div class="field"><label for="coupon">折扣券（元）</label><input id="coupon" type="number" inputmode="decimal" min="0" step="any" placeholder="(0)"><p class="hint">沒有折扣請填 0</p></div>
+  </div>
 </section>
 
 <section class="card" id="result" aria-live="polite">
-  <p class="empty" id="placeholder">填完三個欄位，這裡會顯示結果。</p>
+  <p class="empty" id="placeholder">填完份數、每份蛋白質和價格，這裡會顯示結果。</p>
   <div id="out" hidden>
     <p class="verdict" id="verdict"></p>
-    <p class="big"><span id="perg"></span> <small>g 蛋白質 / 1 元</small></p>
+    <p class="big"><span id="perg"></span> <small>g 蛋白質 / 1 元（折扣後）</small></p>
     <div class="gauge" id="gauge"><div class="pin" id="pin"></div></div>
     <div class="scale"><span>不推薦</span><span>推薦</span></div>
     <dl>
+      <dt>原價 g/元</dt><dd id="gOrig"></dd>
+      <dt>折扣後價格</dt><dd id="paid"></dd>
       <dt>每 1g 蛋白質價格</dt><dd id="gper"></dd>
       <dt>整包蛋白質</dt><dd id="tot"></dd>
       <dt>每份價格</dt><dd id="perserv"></dd>
@@ -94,6 +110,7 @@ dialog h2{font-size:1.1rem;margin:0 0 4px}
     </dl>
     <p class="refs" id="refs"></p>
     <p style="margin:14px 0 0;display:flex;gap:10px;align-items:center"><button id="add" type="button">加入比較</button><button id="cancel" type="button" class="ghost" hidden>取消修改</button></p>
+    <p class="note" id="need" hidden></p>
     <p class="msg" id="msg" role="alert" hidden></p>
   </div>
 </section>
@@ -101,6 +118,7 @@ dialog h2{font-size:1.1rem;margin:0 0 4px}
 <section class="card" aria-label="比較清單">
   <h2 style="font-size:1.05rem;margin:0">比較清單</h2>
   <p class="note" id="mode"></p>
+  <p class="note" id="syncRow" hidden><button id="sync" type="button" class="ghost">重新整理清單</button></p>
   <div class="cupset"><label for="cup">一杯蛋白質（g）</label><input id="cup" type="number" inputmode="decimal" min="1" step="any" value="25"></div>
   <div class="tabs" id="tabs"></div>
   <p class="empty" id="cmpEmpty">還沒有項目。算完一款後按「加入比較」。</p>
@@ -111,7 +129,7 @@ dialog h2{font-size:1.1rem;margin:0 0 4px}
 
 <dialog id="dlg" aria-labelledby="dlgT">
   <h2 id="dlgT">進階設定</h2>
-  <p class="note" style="margin:0">評價標準（單位：g 蛋白質 / 1 元）。只會改變你自己看到的評價，不影響朋友。</p>
+  <p class="note" style="margin:0">評價標準（單位：折扣後 g 蛋白質 / 1 元）。只會改變你自己看到的評價，不影響朋友。</p>
   <div class="trow"><span>推薦購買（以上）</span><input id="t0" type="number" step="any" min="0" inputmode="decimal"></div>
   <div class="trow"><span>可購買（以上）</span><input id="t1" type="number" step="any" min="0" inputmode="decimal"></div>
   <div class="trow"><span>考慮購買（以上）</span><input id="t2" type="number" step="any" min="0" inputmode="decimal"></div>
@@ -124,16 +142,26 @@ dialog h2{font-size:1.1rem;margin:0 0 4px}
 <script>
 (function(){
   var $=function(id){return document.getElementById(id)};
+  /* 共用試算表的網址（Apps Script 網頁應用程式，結尾是 /exec）。留空就只存在這個瀏覽器。 */
+  var SHEET_URL="https://script.google.com/macros/s/AKfycbzdhkVWg1aP_CiGA1RFNes9776zaHOhubef7XbWuTBdZshfG27r2zUBSAjJ0U0KbMnYsw/exec";
   var LKEY="protein-compare-v1", SKEY="protein-settings-v1", DEF=[0.8,0.7,0.6,0.5];
-  var cats=["豆漿","濃縮乳清","分離乳清","水解乳清"];
+  var cats=["豆漿","濃縮乳清","分離乳清","水解乳清"], places=["蝦皮","momo","酷澎","全聯","Costco"];
   var S={cup:25,t:DEF.slice()}, items=[], cur=null, editId=null, filter="全部";
-  var db=null, mode="local", canWrite=true, localItems=[];
+  var mode="local", canWrite=true, localItems=[];
 
   try{var ss=JSON.parse(localStorage.getItem(SKEY)||"null");
     if(ss){if(ss.cup>0)S.cup=ss.cup;if(ss.t&&ss.t.length===4&&ss.t.every(function(x){return x>0}))S.t=ss.t}}catch(e){}
-  try{localItems=(JSON.parse(localStorage.getItem(LKEY)||"[]")||[]).map(function(x){x.id=String(x.id);return x})}catch(e){localItems=[]}
+  try{localItems=(JSON.parse(localStorage.getItem(LKEY)||"[]")||[]).map(norm)}catch(e){localItems=[]}
   items=localItems;
 
+  /* 舊資料沒有折扣券、購買位置、日期，補上預設值 */
+  function norm(x){
+    x.id=String(x.id);x.n=Number(x.n);x.p=Number(x.p);x.price=Number(x.price);
+    x.coupon=Number(x.coupon)||0;x.place=x.place||"";x.date=x.date||"";
+    var tot=x.n*x.p;x.pergOrig=x.price/tot;x.perg=(x.price-x.coupon)/tot;
+    return x;
+  }
+  function today(){var d=new Date(),z=function(v){return(v<10?"0":"")+v};return d.getFullYear()+"/"+z(d.getMonth()+1)+"/"+z(d.getDate())}
   function fmt(x,d){return x.toFixed(d===undefined?2:d)}
   function saveS(){try{localStorage.setItem(SKEY,JSON.stringify(S))}catch(e){}}
   function saveLocal(){try{localStorage.setItem(LKEY,JSON.stringify(localItems))}catch(e){}}
@@ -150,42 +178,77 @@ dialog h2{font-size:1.1rem;margin:0 0 4px}
     var r=range(),f=function(v){return Math.min(100,Math.max(0,(v-r[0])/(r[1]-r[0])*100))};
     var a=f(S.t[3]),b=f(S.t[2]),c=f(S.t[1]),d=f(S.t[0]);
     $("gauge").style.background="linear-gradient(90deg,var(--bad) 0 "+a+"%,color-mix(in srgb,var(--bad) 55%,var(--mid)) "+a+"% "+b+"%,var(--mid) "+b+"% "+c+"%,var(--ok) "+c+"% "+d+"%,var(--good) "+d+"% 100%)";
-    $("refs").textContent="目前評價標準（g/元）：推薦 "+S.t[0]+" 以上，可購買 "+S.t[1]+" 以上，考慮 "+S.t[2]+" 以上，猶豫 "+S.t[3]+" 以上，其餘不太推薦。可在右上角齒輪調整。";
+    $("refs").textContent="評價看折扣後的 g/元：推薦 "+S.t[0]+" 以上，可購買 "+S.t[1]+" 以上，考慮 "+S.t[2]+" 以上，猶豫 "+S.t[3]+" 以上，其餘不太推薦。可在右上角齒輪調整。";
   }
+  function placeVal(){var v=$("place").value;return v==="其他"?$("placeOther").value.trim():v}
+  function blank(id){return $(id).value.trim()===""}
+
   function calc(){
     var n=parseFloat($("n").value),p=parseFloat($("p").value),pr=parseFloat($("price").value);
+    var cp=blank("coupon")?0:parseFloat($("coupon").value);
     if(!(n>0&&p>0&&pr>0)){cur=null;$("out").hidden=true;$("placeholder").hidden=false;return}
-    var tot=n*p,perg=pr/tot,g=1/perg,lv=level(g);
-    cur={perg:perg,price:pr,n:n,p:p};
     $("placeholder").hidden=true;$("out").hidden=false;
+    var bad=!(cp>=0)||cp>=pr, paid=bad?pr:pr-cp;
+    var tot=n*p,perg=paid/tot,g=1/perg,lv=level(g);
+    cur=bad?null:{perg:perg,price:pr,coupon:cp,n:n,p:p};
     $("verdict").textContent=lv[0];$("verdict").style.color=lv[1];
     $("perg").textContent=fmt(g);
+    $("gOrig").textContent=fmt(tot/pr)+" g/元";
+    $("paid").textContent=fmt(paid,0)+" 元";
     $("gper").textContent=fmt(perg)+" 元";
     $("tot").textContent=fmt(tot,0)+" g";
-    $("perserv").textContent=fmt(pr/n,1)+" 元";
+    $("perserv").textContent=fmt(paid/n,1)+" 元";
     $("c24").textContent=fmt(perg*S.cup,1)+" 元";$("cupL").textContent=S.cup;
     $("mo").textContent=fmt(perg*S.cup*30,0)+" 元";
     $("days").textContent=fmt(tot/S.cup,0)+" 天";
     var r=range();$("pin").style.left=Math.min(100,Math.max(0,(g-r[0])/(r[1]-r[0])*100))+"%";
-    $("add").hidden=!canWrite;
+    checkReady(bad);
+  }
+  /* 所有欄位都要填，才能按加入 */
+  function checkReady(bad){
+    var miss=[];
+    if(blank("name"))miss.push("品名");
+    if(!$("place").value)miss.push("購買位置");
+    else if($("place").value==="其他"&&blank("placeOther"))miss.push("其他購買位置");
+    if(blank("coupon"))miss.push("折扣券（沒有請填 0）");
+    var t=bad?"折扣券要大於等於 0，而且要小於原價。":miss.length?"還沒填："+miss.join("、"):"";
+    $("need").textContent=t;$("need").hidden=!t;
+    $("add").disabled=!!t||!cur;$("add").hidden=!canWrite;
   }
   function showMsg(t){var m=$("msg");m.textContent=t||"";m.hidden=!t}
 
-  /* ---- storage layer: shared db when available, otherwise this device ---- */
+  /* ---- storage layer: shared Google Sheet when available, otherwise this device ---- */
   function newId(){return "i"+Date.now().toString(36)+Math.random().toString(36).slice(2,6)}
+  function useList(j){
+    if(!j||!Array.isArray(j.items))throw new Error("bad response");
+    items=j.items.map(norm);
+    if(!j.ok)throw new Error(j.error||"server error");
+  }
+  async function api(body){
+    var r=await fetch(SHEET_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(body)});
+    useList(await r.json());
+  }
+  var loading=false;
+  async function load(){
+    if(!SHEET_URL||loading)return;
+    loading=true;$("sync").disabled=true;$("sync").textContent="讀取中…";
+    try{var r=await fetch(SHEET_URL);useList(await r.json());mode="sheet";showMsg("")}
+    catch(e){if(mode!=="sheet"){mode="local";items=localItems}showMsg("讀不到共用清單，先顯示這個瀏覽器裡的清單。請稍後按「重新整理清單」。")}
+    loading=false;$("sync").disabled=false;$("sync").textContent="重新整理清單";
+    render();
+  }
   async function put(id,rec){
-    if(mode==="db"){await db.collection("items").doc(id).set(rec);return}
-    var o=Object.assign({id:id},rec),i=localItems.findIndex(function(x){return x.id===id});
+    if(mode==="sheet"){await api({action:"put",id:id,rec:rec});return}
+    var o=norm(Object.assign({id:id},rec)),i=localItems.findIndex(function(x){return x.id===id});
     if(i>=0)localItems[i]=o;else localItems.push(o);
     items=localItems;saveLocal();
   }
   async function del(id){
-    if(mode==="db"){await db.collection("items").doc(id).delete();return}
+    if(mode==="sheet"){await api({action:"del",id:id});return}
     localItems=localItems.filter(function(x){return x.id!==id});items=localItems;saveLocal();
   }
   function fail(e){
-    if(e&&e.code==="invalid_argument"){canWrite=false;showMsg("你目前只有檢視權限，無法修改共用清單。請向分享者要求「Contributor」權限。")}
-    else showMsg("儲存失敗，請稍後再試。");
+    showMsg(mode==="sheet"?"儲存到共用試算表失敗，請按「重新整理清單」後再試一次。":"儲存失敗，請稍後再試。");
     render();calc();
   }
 
@@ -200,68 +263,80 @@ dialog h2{font-size:1.1rem;margin:0 0 4px}
       box.appendChild(b);
     });
   }
+  function el(tag,cls,text){var e=document.createElement(tag);if(cls)e.className=cls;if(text!==undefined)e.textContent=text;return e}
+  function stat(cls,k,v,color){var d=el("div",cls);d.appendChild(el("span","k",k));var s=el("span","v",v);if(color)s.style.color=color;d.appendChild(s);return d}
   function render(){
     var ol=$("list");ol.innerHTML="";
     var view=items.filter(function(x){return filter==="全部"||x.cat===filter});
     renderTabs();
-    $("mode").textContent=mode==="db"?(canWrite?"共用清單：有權限的朋友看到的是同一份，任何人修改都會同步。":"共用清單（唯讀）：你可以查看，但不能新增或修改。"):"清單只存在這個瀏覽器，換裝置或清除瀏覽器資料就會消失。";
+    $("mode").textContent=mode==="sheet"?"共用清單：存在 Google 試算表，大家看到的是同一份。別人剛新增的項目，按「重新整理清單」就會出現。":"清單只存在這個瀏覽器，換裝置或清除瀏覽器資料就會消失。";
     $("cmpEmpty").textContent=items.length?"這個分類還沒有項目。":"還沒有項目。算完一款後按「加入比較」。";
     $("cmpEmpty").hidden=view.length>0;
     view.slice().sort(function(a,b){return a.perg-b.perg}).forEach(function(it,i){
-      var li=document.createElement("li");if(i===0&&view.length>1)li.className="best";
-      var l=document.createElement("div");
-      var nm=document.createElement("div");nm.className="nm";nm.textContent=it.name;
-      var mt=document.createElement("div");mt.className="meta";
-      mt.textContent=(it.cat||"未分類")+"，"+it.price+" 元，"+it.n+" 份 × "+it.p+"g";
-      l.appendChild(nm);l.appendChild(mt);
-      var g=1/it.perg,lvl=level(g);
-      var v=document.createElement("div");v.className="v";v.textContent=fmt(g)+" g/元";
-      var lv=document.createElement("div");lv.className="lv";lv.textContent=lvl[0];lv.style.color=lvl[1];
-      var cup=document.createElement("div");cup.textContent="一杯 "+S.cup+"g："+fmt(it.perg*S.cup,1)+" 元";
-      var st=document.createElement("div");st.className="stats";st.appendChild(v);st.appendChild(cup);st.appendChild(lv);
+      var li=el("li");if(i===0&&view.length>1)li.className="best";
+      var l=el("div");
+      l.appendChild(el("div","nm",it.name));
+      l.appendChild(el("div","meta",[it.cat||"未分類",it.place||"未填購買位置",it.date||"日期不明"].join("｜")));
+      l.appendChild(el("div","meta","原價 "+it.price+" 元"+(it.coupon?"，折扣券 "+it.coupon+" 元":"，無折扣")+"，"+it.n+" 份 × "+it.p+"g"));
       li.appendChild(l);
       if(canWrite){
-        var ed=document.createElement("button");ed.type="button";ed.className="ghost";ed.textContent="修改";
-        ed.setAttribute("aria-label","修改 "+it.name);ed.onclick=function(){startEdit(it.id)};
-        var d=document.createElement("button");d.type="button";d.className="ghost";d.textContent="刪除";
-        d.setAttribute("aria-label","刪除 "+it.name);
-        d.onclick=async function(){try{await del(it.id);if(editId===it.id)stopEdit();render()}catch(e){fail(e)}};
-        var bt=document.createElement("div");bt.style.display="flex";bt.style.gap="6px";bt.appendChild(ed);bt.appendChild(d);li.appendChild(bt);
+        var ed=el("button","ghost","修改");ed.type="button";ed.setAttribute("aria-label","修改 "+it.name);ed.onclick=function(){startEdit(it.id)};
+        var d=el("button","ghost","刪除");d.type="button";d.setAttribute("aria-label","刪除 "+it.name);
+        d.onclick=async function(){d.disabled=true;try{await del(it.id);if(editId===it.id)stopEdit();render()}catch(e){fail(e)}};
+        var bt=el("div");bt.style.display="flex";bt.style.gap="6px";bt.appendChild(ed);bt.appendChild(d);li.appendChild(bt);
       }
-      li.appendChild(st);ol.appendChild(li);
+      var lvl=level(1/it.perg),st=el("div","stats");
+      st.appendChild(stat("","原價","" +fmt(1/it.pergOrig)+" g/元"));
+      st.appendChild(stat("disc","折扣後",fmt(1/it.perg)+" g/元"));
+      st.appendChild(stat("","評價（折扣後）",lvl[0],lvl[1]));
+      li.appendChild(st);
+      li.appendChild(el("div","meta","一杯 "+S.cup+"g（折扣後）："+fmt(it.perg*S.cup,1)+" 元"));
+      ol.appendChild(li);
     });
-    var showImp=mode==="db"&&canWrite&&localItems.length>0;
+    $("syncRow").hidden=!SHEET_URL;
+    var showImp=mode==="sheet"&&canWrite&&localItems.length>0;
     $("imp").hidden=!showImp;
     if(showImp)$("impBtn").textContent="把這台裝置上的 "+localItems.length+" 項舊清單，加入共用清單";
   }
+  function setPlace(v){
+    var s=$("place");
+    if(!v){s.value="";$("placeOther").value=""}
+    else if(places.indexOf(v)>=0){s.value=v;$("placeOther").value=""}
+    else{s.value="其他";$("placeOther").value=v}
+    syncPlace();
+  }
+  function syncPlace(){$("placeOtherF").hidden=$("place").value!=="其他";$("place").classList.toggle("unset",!$("place").value)}
   function startEdit(id){
     var it=items.filter(function(x){return x.id===id})[0];if(!it)return;
-    editId=id;$("name").value=it.name;$("n").value=it.n;$("p").value=it.p;$("price").value=it.price;if(it.cat)$("cat").value=it.cat;
+    editId=id;$("name").value=it.name;$("n").value=it.n;$("p").value=it.p;$("price").value=it.price;$("coupon").value=it.coupon;
+    if(it.cat)$("cat").value=it.cat;setPlace(it.place);
     $("add").textContent="更新清單項目";$("cancel").hidden=false;calc();
     $("name").scrollIntoView({block:"center"});
   }
   function stopEdit(){
-    editId=null;["name","n","p","price"].forEach(function(k){$(k).value=""});
+    editId=null;["name","n","p","price","coupon"].forEach(function(k){$(k).value=""});setPlace("");
     $("add").textContent="加入比較";$("cancel").hidden=true;calc();
   }
 
-  ["n","p","price"].forEach(function(id){$(id).addEventListener("input",calc)});
+  ["n","p","price","coupon","name","placeOther"].forEach(function(id){$(id).addEventListener("input",calc)});
+  $("place").addEventListener("change",function(){syncPlace();calc();if(this.value==="其他")$("placeOther").focus()});
   $("cancel").addEventListener("click",stopEdit);
   $("add").addEventListener("click",async function(){
-    if(!cur||!canWrite)return;showMsg("");
-    var nm=$("name").value.trim()||("品項 "+(items.length+1));
-    var rec={name:nm,cat:$("cat").value,perg:cur.perg,price:cur.price,n:cur.n,p:cur.p};
-    try{await put(editId||newId(),rec)}catch(e){fail(e);return}
-    if(editId)stopEdit();
+    if(!cur||!canWrite||$("add").disabled)return;showMsg("");
+    var old=editId&&items.filter(function(x){return x.id===editId})[0];
+    var rec={name:$("name").value.trim(),cat:$("cat").value,place:placeVal(),price:cur.price,coupon:cur.coupon,n:cur.n,p:cur.p,
+      perg:cur.perg,date:(old&&old.date)||today()};
+    var btn=$("add");btn.disabled=true;
+    try{await put(editId||newId(),rec)}catch(e){btn.disabled=false;fail(e);return}
+    if(editId)stopEdit();else stopEdit();
     if(filter!=="全部")filter=rec.cat;
     render();
   });
   $("impBtn").addEventListener("click",async function(){
-    var list=localItems.slice();
-    try{
-      for(var i=0;i<list.length;i++){var o=list[i];await db.collection("items").doc("L"+o.id).set({name:o.name,cat:o.cat||"",perg:o.perg,price:o.price,n:o.n,p:o.p})}
-      localItems=[];saveLocal();render();
-    }catch(e){fail(e)}
+    var list=localItems.slice();$("impBtn").disabled=true;
+    try{await api({action:"batch",recs:list.map(function(o){return{id:"L"+o.id,name:o.name,cat:o.cat||"",place:o.place||"",price:o.price,coupon:o.coupon||0,n:o.n,p:o.p,date:o.date||""}})});localItems=[];saveLocal()}
+    catch(e){fail(e)}
+    $("impBtn").disabled=false;render();
   });
   $("cup").value=S.cup;
   $("cup").addEventListener("input",function(){var v=parseFloat(this.value);if(!(v>0))return;S.cup=v;saveS();calc();render()});
@@ -277,9 +352,10 @@ dialog h2{font-size:1.1rem;margin:0 0 4px}
     if(!ok){$("dErr").textContent="每一級都要大於 0，而且要由高到低，例如 0.8、0.7、0.6、0.5。";$("dErr").hidden=false;return}
     S.t=t;saveS();paintGauge();calc();render();$("dlg").close();
   });
+  $("sync").addEventListener("click",load);
+  document.addEventListener("visibilitychange",function(){if(!document.hidden&&mode==="sheet")load()});
 
-  paintGauge();render();
-
+  paintGauge();syncPlace();render();load();
 })();
 </script>
 </body>
