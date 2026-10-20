@@ -60,9 +60,12 @@ li.best .disc .v{color:var(--good)}
 dialog{border:1px solid var(--line);border-radius:14px;background:var(--card);color:var(--ink);padding:20px;width:min(92vw,420px)}
 dialog::backdrop{background:rgba(0,0,0,.45)}
 dialog h2{font-size:1.1rem;margin:0 0 4px}
-.trow{display:grid;grid-template-columns:1fr 100px;gap:10px;align-items:center;margin:10px 0}
-.trow span{font-weight:600}
-.trow input{font-size:1rem;padding:6px 10px}
+.tgrid{display:grid;grid-template-columns:auto repeat(4,1fr);gap:6px;align-items:center;margin:12px 0}
+.tgrid .h{font-size:.75rem;color:var(--mute);text-align:center;line-height:1.3}
+.tgrid .c{font-weight:600;font-size:.9rem;white-space:nowrap}
+.tgrid input{font-size:.9rem;padding:6px 0;text-align:center;min-width:0;-moz-appearance:textfield;appearance:textfield}
+.tgrid input::-webkit-inner-spin-button,.tgrid input::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+.tgrid{gap:5px}
 .btns{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
 </style>
 </head>
@@ -129,11 +132,8 @@ dialog h2{font-size:1.1rem;margin:0 0 4px}
 
 <dialog id="dlg" aria-labelledby="dlgT">
   <h2 id="dlgT">進階設定</h2>
-  <p class="note" style="margin:0">評價標準（單位：折扣後 g 蛋白質 / 1 元）。只會改變你自己看到的評價，不影響朋友。</p>
-  <div class="trow"><span>推薦購買（以上）</span><input id="t0" type="number" step="any" min="0" inputmode="decimal"></div>
-  <div class="trow"><span>可購買（以上）</span><input id="t1" type="number" step="any" min="0" inputmode="decimal"></div>
-  <div class="trow"><span>考慮購買（以上）</span><input id="t2" type="number" step="any" min="0" inputmode="decimal"></div>
-  <div class="trow"><span>猶豫（以上）</span><input id="t3" type="number" step="any" min="0" inputmode="decimal"></div>
+  <p class="note" style="margin:0">各分類的評價標準（單位：折扣後 g 蛋白質 / 1 元，填「以上」的下限）。只會改變你自己看到的評價，不影響朋友。</p>
+  <div class="tgrid" id="tgrid"></div>
   <p class="note" style="margin:0">低於「猶豫」的下限，就是不太推薦。</p>
   <p class="msg" id="dErr" hidden></p>
   <div class="btns"><button id="dSave" type="button">儲存</button><button id="dReset" type="button" class="ghost">恢復預設</button><button id="dClose" type="button" class="ghost">關閉</button></div>
@@ -144,13 +144,16 @@ dialog h2{font-size:1.1rem;margin:0 0 4px}
   var $=function(id){return document.getElementById(id)};
   /* 共用試算表的網址（Apps Script 網頁應用程式，結尾是 /exec）。留空就只存在這個瀏覽器。 */
   var SHEET_URL="https://script.google.com/macros/s/AKfycbzdhkVWg1aP_CiGA1RFNes9776zaHOhubef7XbWuTBdZshfG27r2zUBSAjJ0U0KbMnYsw/exec";
-  var LKEY="protein-compare-v1", SKEY="protein-settings-v1", DEF=[0.8,0.7,0.6,0.5];
+  var LKEY="protein-compare-v1", SKEY="protein-settings-v1", DEF={"豆漿":[1.2,1.05,0.9,0.75],"濃縮乳清":[0.9,0.8,0.7,0.6],"分離乳清":[0.75,0.65,0.55,0.45],"水解乳清":[0.55,0.45,0.4,0.35]};
   var cats=["豆漿","濃縮乳清","分離乳清","水解乳清"], places=["蝦皮","momo","酷澎","全聯","Costco"];
-  var S={cup:25,t:DEF.slice()}, items=[], cur=null, editId=null, filter="全部";
+  function copyDef(){var o={};cats.forEach(function(c){o[c]=DEF[c].slice()});return o}
+  function okT(t){return Array.isArray(t)&&t.length===4&&t.every(function(x){return x>0})&&t[0]>t[1]&&t[1]>t[2]&&t[2]>t[3]}
+  var S={cup:25,tc:copyDef()}, items=[], cur=null, editId=null, filter="全部";
   var mode="local", canWrite=true, localItems=[];
 
   try{var ss=JSON.parse(localStorage.getItem(SKEY)||"null");
-    if(ss){if(ss.cup>0)S.cup=ss.cup;if(ss.t&&ss.t.length===4&&ss.t.every(function(x){return x>0}))S.t=ss.t}}catch(e){}
+    if(ss){if(ss.cup>0)S.cup=ss.cup;if(ss.tc)cats.forEach(function(c){if(okT(ss.tc[c]))S.tc[c]=ss.tc[c]})}}catch(e){}
+  function th(cat){return S.tc[cat]||S.tc["濃縮乳清"]}
   try{localItems=(JSON.parse(localStorage.getItem(LKEY)||"[]")||[]).map(norm)}catch(e){localItems=[]}
   items=localItems;
 
@@ -165,20 +168,20 @@ dialog h2{font-size:1.1rem;margin:0 0 4px}
   function fmt(x,d){return x.toFixed(d===undefined?2:d)}
   function saveS(){try{localStorage.setItem(SKEY,JSON.stringify(S))}catch(e){}}
   function saveLocal(){try{localStorage.setItem(LKEY,JSON.stringify(localItems))}catch(e){}}
-  function level(g){
-    var t=S.t;
+  function level(g,cat){
+    var t=th(cat);
     if(g>=t[0])return["推薦購買","var(--good)"];
     if(g>=t[1])return["可購買","var(--ok)"];
     if(g>=t[2])return["考慮購買","var(--mid)"];
     if(g>=t[3])return["猶豫","color-mix(in srgb,var(--bad) 55%,var(--mid))"];
     return["不太推薦","var(--bad)"];
   }
-  function range(){var span=S.t[0]-S.t[3],lo=Math.max(0,S.t[3]-span*2/3),hi=S.t[0]+span;return[lo,hi]}
+  function range(t){var span=t[0]-t[3],lo=Math.max(0,t[3]-span*2/3),hi=t[0]+span;return[lo,hi]}
   function paintGauge(){
-    var r=range(),f=function(v){return Math.min(100,Math.max(0,(v-r[0])/(r[1]-r[0])*100))};
-    var a=f(S.t[3]),b=f(S.t[2]),c=f(S.t[1]),d=f(S.t[0]);
+    var cat=$("cat").value,t=th(cat),r=range(t),f=function(v){return Math.min(100,Math.max(0,(v-r[0])/(r[1]-r[0])*100))};
+    var a=f(t[3]),b=f(t[2]),c=f(t[1]),d=f(t[0]);
     $("gauge").style.background="linear-gradient(90deg,var(--bad) 0 "+a+"%,color-mix(in srgb,var(--bad) 55%,var(--mid)) "+a+"% "+b+"%,var(--mid) "+b+"% "+c+"%,var(--ok) "+c+"% "+d+"%,var(--good) "+d+"% 100%)";
-    $("refs").textContent="評價看折扣後的 g/元：推薦 "+S.t[0]+" 以上，可購買 "+S.t[1]+" 以上，考慮 "+S.t[2]+" 以上，猶豫 "+S.t[3]+" 以上，其餘不太推薦。可在右上角齒輪調整。";
+    $("refs").textContent=cat+"的評價標準（折扣後 g/元）：推薦 "+t[0]+" 以上，可購買 "+t[1]+" 以上，考慮 "+t[2]+" 以上，猶豫 "+t[3]+" 以上，其餘不太推薦。可在右上角齒輪調整。";
   }
   function placeVal(){var v=$("place").value;return v==="其他"?$("placeOther").value.trim():v}
   function blank(id){return $(id).value.trim()===""}
@@ -189,7 +192,7 @@ dialog h2{font-size:1.1rem;margin:0 0 4px}
     if(!(n>0&&p>0&&pr>0)){cur=null;$("out").hidden=true;$("placeholder").hidden=false;return}
     $("placeholder").hidden=true;$("out").hidden=false;
     var bad=!(cp>=0)||cp>=pr, paid=bad?pr:pr-cp;
-    var tot=n*p,perg=paid/tot,g=1/perg,lv=level(g);
+    var tot=n*p,perg=paid/tot,g=1/perg,lv=level(g,$("cat").value);
     cur=bad?null:{perg:perg,price:pr,coupon:cp,n:n,p:p};
     $("verdict").textContent=lv[0];$("verdict").style.color=lv[1];
     $("perg").textContent=fmt(g);
@@ -201,7 +204,7 @@ dialog h2{font-size:1.1rem;margin:0 0 4px}
     $("c24").textContent=fmt(perg*S.cup,1)+" 元";$("cupL").textContent=S.cup;
     $("mo").textContent=fmt(perg*S.cup*30,0)+" 元";
     $("days").textContent=fmt(tot/S.cup,0)+" 天";
-    var r=range();$("pin").style.left=Math.min(100,Math.max(0,(g-r[0])/(r[1]-r[0])*100))+"%";
+    paintGauge();var r=range(th($("cat").value));$("pin").style.left=Math.min(100,Math.max(0,(g-r[0])/(r[1]-r[0])*100))+"%";
     checkReady(bad);
   }
   /* 所有欄位都要填，才能按加入 */
@@ -285,7 +288,7 @@ dialog h2{font-size:1.1rem;margin:0 0 4px}
         d.onclick=async function(){d.disabled=true;try{await del(it.id);if(editId===it.id)stopEdit();render()}catch(e){fail(e)}};
         var bt=el("div");bt.style.display="flex";bt.style.gap="6px";bt.appendChild(ed);bt.appendChild(d);li.appendChild(bt);
       }
-      var lvl=level(1/it.perg),st=el("div","stats");
+      var lvl=level(1/it.perg,it.cat),st=el("div","stats");
       st.appendChild(stat("","原價","" +fmt(1/it.pergOrig)+" g/元"));
       st.appendChild(stat("disc","折扣後",fmt(1/it.perg)+" g/元"));
       st.appendChild(stat("","評價（折扣後）",lvl[0],lvl[1]));
@@ -319,6 +322,7 @@ dialog h2{font-size:1.1rem;margin:0 0 4px}
   }
 
   ["n","p","price","coupon","name","placeOther"].forEach(function(id){$(id).addEventListener("input",calc)});
+  $("cat").addEventListener("change",calc);
   $("place").addEventListener("change",function(){syncPlace();calc();if(this.value==="其他")$("placeOther").focus()});
   $("cancel").addEventListener("click",stopEdit);
   $("add").addEventListener("click",async function(){
@@ -342,15 +346,19 @@ dialog h2{font-size:1.1rem;margin:0 0 4px}
   $("cup").addEventListener("input",function(){var v=parseFloat(this.value);if(!(v>0))return;S.cup=v;saveS();calc();render()});
 
   /* ---- advanced settings (gear) ---- */
-  function fillDlg(t){for(var i=0;i<4;i++)$("t"+i).value=t[i];$("dErr").hidden=true}
-  $("gear").addEventListener("click",function(){fillDlg(S.t);$("dlg").showModal()});
+  var LV=["推薦","可購買","考慮","猶豫"];
+  (function(){var g=$("tgrid"),h='<span></span>'+LV.map(function(x){return'<span class="h">'+x+'</span>'}).join("");
+    cats.forEach(function(c,ci){h+='<span class="c">'+c+'</span>';for(var i=0;i<4;i++)h+='<input id="t'+ci+'_'+i+'" type="number" step="any" min="0" inputmode="decimal" aria-label="'+c+' '+LV[i]+'">'});
+    g.innerHTML=h})();
+  function fillDlg(tc){cats.forEach(function(c,ci){for(var i=0;i<4;i++)$("t"+ci+"_"+i).value=tc[c][i]});$("dErr").hidden=true}
+  $("gear").addEventListener("click",function(){fillDlg(S.tc);$("dlg").showModal()});
   $("dClose").addEventListener("click",function(){$("dlg").close()});
-  $("dReset").addEventListener("click",function(){fillDlg(DEF)});
+  $("dReset").addEventListener("click",function(){fillDlg(copyDef())});
   $("dSave").addEventListener("click",function(){
-    var t=[0,1,2,3].map(function(i){return parseFloat($("t"+i).value)});
-    var ok=t.every(function(x){return x>0})&&t[0]>t[1]&&t[1]>t[2]&&t[2]>t[3];
-    if(!ok){$("dErr").textContent="每一級都要大於 0，而且要由高到低，例如 0.8、0.7、0.6、0.5。";$("dErr").hidden=false;return}
-    S.t=t;saveS();paintGauge();calc();render();$("dlg").close();
+    var tc={},bad=[];
+    cats.forEach(function(c,ci){var t=[0,1,2,3].map(function(i){return parseFloat($("t"+ci+"_"+i).value)});if(!okT(t))bad.push(c);tc[c]=t});
+    if(bad.length){$("dErr").textContent=bad.join("、")+"：每一級都要大於 0，而且要由左到右、由高到低。";$("dErr").hidden=false;return}
+    S.tc=tc;saveS();calc();render();$("dlg").close();
   });
   $("sync").addEventListener("click",load);
   document.addEventListener("visibilitychange",function(){if(!document.hidden&&mode==="sheet")load()});

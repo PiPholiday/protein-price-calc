@@ -14,7 +14,9 @@ var HEAD = ['id', '新增日期', '購買位置', '品名', '分類', '總份數
             '原價(元)', '折扣券(元)', '折扣後價格(元)', '原價 g/元', '折扣後 g/元', '評價(折扣後)', '更新時間'];
 var C = { id: 0, date: 1, place: 2, name: 3, cat: 4, n: 5, p: 6, price: 7, coupon: 8 };
 var CATS = ['豆漿', '濃縮乳清', '分離乳清', '水解乳清'];
-var LEVELS = [[0.8, '推薦購買'], [0.7, '可購買'], [0.6, '考慮購買'], [0.5, '猶豫']];
+var NAMES = ['推薦購買', '可購買', '考慮購買', '猶豫'];
+var LEVELS = { '豆漿': [1.2, 1.05, 0.9, 0.75], '濃縮乳清': [0.9, 0.8, 0.7, 0.6],
+               '分離乳清': [0.75, 0.65, 0.55, 0.45], '水解乳清': [0.55, 0.45, 0.4, 0.35] }; // 評價(折扣後)欄用的預設標準
 var TZ = 'Asia/Taipei';
 
 function doGet() {
@@ -100,7 +102,8 @@ function clean_(rec) {
 
 function row_(id, r) {
   var tot = r.n * r.p, paid = r.price - r.coupon, g = tot / paid, lv = '不太推薦';
-  for (var i = 0; i < LEVELS.length; i++) if (g >= LEVELS[i][0]) { lv = LEVELS[i][1]; break; }
+  var t = LEVELS[r.cat] || LEVELS['濃縮乳清'];
+  for (var i = 0; i < 4; i++) if (g >= t[i]) { lv = NAMES[i]; break; }
   var round = function (x) { return Math.round(x * 100) / 100; };
   return [id, r.date, r.place, r.name, r.cat, r.n, r.p, r.price, r.coupon, paid, round(tot / r.price), round(g), lv, new Date()];
 }
