@@ -57,6 +57,13 @@ li .meta{font-size:.82rem;color:var(--mute)}
 li.best .disc .v{color:var(--good)}
 .lv{font-weight:700}
 .empty{color:var(--mute);font-size:.9rem;margin:10px 0 0}
+.tools{margin:12px 0 0;display:grid;gap:8px}
+.tools input,.tools select{font-size:.95rem;padding:7px 10px}
+.fl{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.fl select{padding:7px 6px}
+li.old{opacity:.55}
+.oldtag{display:inline-block;font-size:.75rem;color:var(--mid);border:1px solid var(--mid);border-radius:999px;padding:0 8px;margin-top:2px}
+.more{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:10px 0 0;font-size:.85rem;color:var(--mute)}
 dialog{border:1px solid var(--line);border-radius:14px;background:var(--card);color:var(--ink);padding:20px;width:min(92vw,420px)}
 dialog::backdrop{background:rgba(0,0,0,.45)}
 dialog h2{font-size:1.1rem;margin:0 0 4px}
@@ -124,8 +131,17 @@ dialog h2{font-size:1.1rem;margin:0 0 4px}
   <p class="note" id="syncRow" hidden><button id="sync" type="button" class="ghost">重新整理清單</button></p>
   <div class="cupset"><label for="cup">一杯蛋白質（g）</label><input id="cup" type="number" inputmode="decimal" min="1" step="any" value="25"></div>
   <div class="tabs" id="tabs"></div>
+  <div class="tools">
+    <input id="q" type="search" placeholder="(搜尋品名)" aria-label="搜尋品名">
+    <div class="fl">
+      <select id="fPlace" aria-label="篩選購買位置"><option value="">全部通路</option><option>蝦皮</option><option>momo</option><option>酷澎</option><option>全聯</option><option>Costco</option><option value="其他">其他</option></select>
+      <select id="fLv" aria-label="篩選評價"><option value="4">全部評價</option><option value="0">只看推薦</option><option value="1">推薦＋可購買</option></select>
+      <select id="sort" aria-label="排序方式"><option value="cp">依 CP 值</option><option value="date">依日期</option><option value="paid">依價格</option></select>
+    </div>
+  </div>
   <p class="empty" id="cmpEmpty">還沒有項目。算完一款後按「加入比較」。</p>
   <ol id="list"></ol>
+  <p class="more" id="moreRow" hidden><span id="moreTxt"></span><button id="more" type="button" class="ghost"></button></p>
   <p class="note" id="imp" hidden><button id="impBtn" type="button" class="ghost"></button></p>
 </section>
 </main>
@@ -148,7 +164,7 @@ dialog h2{font-size:1.1rem;margin:0 0 4px}
   var cats=["豆漿","濃縮乳清","分離乳清","水解乳清"], places=["蝦皮","momo","酷澎","全聯","Costco"];
   function copyDef(){var o={};cats.forEach(function(c){o[c]=DEF[c].slice()});return o}
   function okT(t){return Array.isArray(t)&&t.length===4&&t.every(function(x){return x>0})&&t[0]>t[1]&&t[1]>t[2]&&t[2]>t[3]}
-  var S={cup:25,tc:copyDef()}, items=[], cur=null, editId=null, filter="全部";
+  var S={cup:25,tc:copyDef()}, items=[], cur=null, editId=null, filter="全部", showAll=false, TOP=5, OLD_MONTHS=2;
   var mode="local", canWrite=true, localItems=[];
 
   try{var ss=JSON.parse(localStorage.getItem(SKEY)||"null");
@@ -262,25 +278,48 @@ dialog h2{font-size:1.1rem;margin:0 0 4px}
       var k=c==="全部"?items.length:items.filter(function(x){return x.cat===c}).length;
       var b=document.createElement("button");b.type="button";b.className="tab";
       b.textContent=c+" "+k;b.setAttribute("aria-pressed",filter===c?"true":"false");
-      b.onclick=function(){filter=c;render()};
+      b.onclick=function(){filter=c;showAll=false;render()};
       box.appendChild(b);
     });
   }
   function el(tag,cls,text){var e=document.createElement(tag);if(cls)e.className=cls;if(text!==undefined)e.textContent=text;return e}
   function stat(cls,k,v,color){var d=el("div",cls);d.appendChild(el("span","k",k));var s=el("span","v",v);if(color)s.style.color=color;d.appendChild(s);return d}
+  var LVN=["推薦購買","可購買","考慮購買","猶豫","不太推薦"];
+  function lvIdx(it){return LVN.indexOf(level(1/it.perg,it.cat)[0])}
+  function isOld(it){
+    var m=/^(\d{4})\/(\d{2})\/(\d{2})$/.exec(it.date||"");if(!m)return false;
+    var lim=new Date();lim.setMonth(lim.getMonth()-OLD_MONTHS);lim.setHours(0,0,0,0);
+    return new Date(+m[1],m[2]-1,+m[3])<lim;
+  }
   function render(){
     var ol=$("list");ol.innerHTML="";
-    var view=items.filter(function(x){return filter==="全部"||x.cat===filter});
+    var q=$("q").value.trim().toLowerCase(),fp=$("fPlace").value,fl=+$("fLv").value,so=$("sort").value;
+    var inCat=items.filter(function(x){return filter==="全部"||x.cat===filter});
+    var view=inCat.filter(function(x){
+      if(q&&String(x.name).toLowerCase().indexOf(q)<0)return false;
+      if(fp==="其他"){if(!x.place||places.indexOf(x.place)>=0)return false}
+      else if(fp&&x.place!==fp)return false;
+      return lvIdx(x)<=fl;
+    });
     renderTabs();
     $("mode").textContent=mode==="sheet"?"共用清單：存在 Google 試算表，大家看到的是同一份。別人剛新增的項目，按「重新整理清單」就會出現。":"清單只存在這個瀏覽器，換裝置或清除瀏覽器資料就會消失。";
-    $("cmpEmpty").textContent=items.length?"這個分類還沒有項目。":"還沒有項目。算完一款後按「加入比較」。";
+    $("cmpEmpty").textContent=!items.length?"還沒有項目。算完一款後按「加入比較」。":!inCat.length?"這個分類還沒有項目。":"沒有符合搜尋或篩選條件的項目。";
     $("cmpEmpty").hidden=view.length>0;
-    view.slice().sort(function(a,b){return a.perg-b.perg}).forEach(function(it,i){
-      var li=el("li");if(i===0&&view.length>1)li.className="best";
+    var cmp={cp:function(a,b){return a.perg-b.perg},
+      date:function(a,b){return String(b.date).localeCompare(String(a.date))||a.perg-b.perg},
+      paid:function(a,b){return(a.price-a.coupon)-(b.price-b.coupon)}}[so];
+    var sorted=view.slice().sort(cmp);
+    /* 最划算的標綠色：只看 2 個月內的價格 */
+    var fresh=view.filter(function(x){return!isOld(x)}).sort(function(a,b){return a.perg-b.perg});
+    var bestId=view.length>1&&fresh.length?fresh[0].id:null;
+    var shown=showAll?sorted:sorted.slice(0,TOP);
+    shown.forEach(function(it){
+      var li=el("li"),old=isOld(it);if(it.id===bestId)li.className="best";if(old)li.classList.add("old");
       var l=el("div");
       l.appendChild(el("div","nm",it.name));
       l.appendChild(el("div","meta",[it.cat||"未分類",it.place||"未填購買位置",it.date||"日期不明"].join("｜")));
       l.appendChild(el("div","meta","原價 "+it.price+" 元"+(it.coupon?"，折扣券 "+it.coupon+" 元":"，無折扣")+"，"+it.n+" 份 × "+it.p+"g"));
+      if(old)l.appendChild(el("span","oldtag","超過 "+OLD_MONTHS+" 個月，價格可能已變動"));
       li.appendChild(l);
       if(canWrite){
         var ed=el("button","ghost","修改");ed.type="button";ed.setAttribute("aria-label","修改 "+it.name);ed.onclick=function(){startEdit(it.id)};
@@ -296,6 +335,10 @@ dialog h2{font-size:1.1rem;margin:0 0 4px}
       li.appendChild(el("div","meta","一杯 "+S.cup+"g（折扣後）："+fmt(it.perg*S.cup,1)+" 元"));
       ol.appendChild(li);
     });
+    var hid=sorted.length-shown.length;
+    $("moreRow").hidden=sorted.length<=TOP;
+    $("moreTxt").textContent="顯示 "+shown.length+" / "+sorted.length+" 筆";
+    $("more").textContent=showAll?"只顯示前 "+TOP+" 名":"顯示全部（還有 "+hid+" 筆）";
     $("syncRow").hidden=!SHEET_URL;
     var showImp=mode==="sheet"&&canWrite&&localItems.length>0;
     $("imp").hidden=!showImp;
@@ -334,6 +377,7 @@ dialog h2{font-size:1.1rem;margin:0 0 4px}
     try{await put(editId||newId(),rec)}catch(e){btn.disabled=false;fail(e);return}
     if(editId)stopEdit();else stopEdit();
     if(filter!=="全部")filter=rec.cat;
+    $("q").value="";$("fPlace").value="";$("fLv").value="4";
     render();
   });
   $("impBtn").addEventListener("click",async function(){
@@ -361,6 +405,9 @@ dialog h2{font-size:1.1rem;margin:0 0 4px}
     S.tc=tc;saveS();calc();render();$("dlg").close();
   });
   $("sync").addEventListener("click",load);
+  $("q").addEventListener("input",function(){showAll=false;render()});
+  ["fPlace","fLv","sort"].forEach(function(id){$(id).addEventListener("change",function(){showAll=false;render()})});
+  $("more").addEventListener("click",function(){showAll=!showAll;render()});
   document.addEventListener("visibilitychange",function(){if(!document.hidden&&mode==="sheet")load()});
 
   paintGauge();syncPlace();render();load();
