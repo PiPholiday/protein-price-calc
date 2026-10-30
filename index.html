@@ -63,6 +63,24 @@ li.best .disc .v{color:var(--good)}
 .fl select{padding:7px 6px}
 li.old{opacity:.55}
 .oldtag{display:inline-block;font-size:.75rem;color:var(--mid);border:1px solid var(--mid);border-radius:999px;padding:0 8px;margin-top:2px}
+.ptabs{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:0 0 16px;padding:4px;background:var(--card);border:1px solid var(--line);border-radius:12px}
+.ptabs button{background:transparent;color:var(--mute);border:0;padding:9px 8px;font-weight:600}
+.ptabs button[aria-selected="true"]{background:var(--accent);color:var(--card)}
+[hidden]{display:none!important}
+.srow{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0 0}
+.srow label{margin:0}
+.srow input{margin-top:4px;font-size:1rem;padding:7px 10px}
+.sum{margin:14px 0 0;padding:12px 14px;border-radius:10px;background:var(--bg);display:grid;gap:2px}
+.sum .big2{font-size:1.5rem;font-weight:700}
+.slist{margin:10px 0 0}
+.slist li{grid-template-columns:1fr auto auto;align-items:center}
+.slist input{width:84px;font-size:1rem;padding:5px 8px;text-align:right}
+.sadd{display:grid;grid-template-columns:1fr 92px auto;gap:8px;margin:14px 0 0}
+.sadd input{font-size:1rem;padding:8px 10px;min-width:0}
+.sadd button{padding:8px 12px}
+.pick{display:inline-block;margin-top:4px;font-size:.8rem;font-weight:600;padding:2px 10px;border-radius:999px;background:transparent;color:var(--mute);border:1px solid var(--line)}
+.pick:active{color:var(--accent);border-color:var(--accent)}
+.ok{color:var(--good)}.warn{color:var(--mid)}.low{color:var(--bad)}
 .more{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:10px 0 0;font-size:.85rem;color:var(--mute)}
 dialog{border:1px solid var(--line);border-radius:14px;background:var(--card);color:var(--ink);padding:20px;width:min(92vw,420px)}
 dialog::backdrop{background:rgba(0,0,0,.45)}
@@ -84,6 +102,11 @@ dialog h2{font-size:1.1rem;margin:0 0 4px}
   <button class="gear" id="gear" type="button" aria-label="進階設定" title="進階設定"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
 </header>
 
+<nav class="ptabs" role="tablist" aria-label="頁面">
+  <button type="button" role="tab" id="tabCalc" aria-controls="pgCalc">CP 值計算</button>
+  <button type="button" role="tab" id="tabStock" aria-controls="pgStock">存貨與補貨</button>
+</nav>
+<div id="pgCalc" role="tabpanel" aria-labelledby="tabCalc">
 <section class="card" aria-label="輸入">
   <div class="field"><label for="name">品名</label><input id="name" type="text" placeholder="(例如 Tryall 巧克力)"></div>
   <div class="row">
@@ -144,6 +167,27 @@ dialog h2{font-size:1.1rem;margin:0 0 4px}
   <p class="more" id="moreRow" hidden><span id="moreTxt"></span><button id="more" type="button" class="ghost"></button></p>
   <p class="note" id="imp" hidden><button id="impBtn" type="button" class="ghost"></button></p>
 </section>
+</div>
+<div id="pgStock" role="tabpanel" aria-labelledby="tabStock" hidden>
+<section class="card" aria-label="存貨與補貨提醒" id="stockCard">
+  <h2 style="font-size:1.05rem;margin:0">存貨與補貨提醒</h2>
+  <p class="note">只存在這個瀏覽器。把手上每一種高蛋白都加進來。喝完一份就在那包按「喝了 1 份」，不會自動扣；上面的「還能喝幾天」是用每天份數推估的。</p>
+  <div class="srow">
+    <label>每天喝幾份<input id="sPer" type="number" inputmode="decimal" min="0.5" step="0.5"></label>
+    <label>剩幾天提醒<input id="sAlert" type="number" inputmode="numeric" min="1" step="1"></label>
+  </div>
+  <div class="sum" id="sSum"></div>
+  <ol id="sList" class="slist"></ol>
+  <div class="sadd">
+    <input id="sName" type="text" list="sNames" placeholder="(品名)" aria-label="存貨品名">
+    <datalist id="sNames"></datalist>
+    <input id="sLeft" type="number" inputmode="decimal" min="0" step="any" placeholder="(剩幾份)" aria-label="剩下份數">
+    <button id="sAdd" type="button">加入存貨</button>
+  </div>
+  <p class="hint">整包還沒開，就填包裝上的「本包裝含幾份」。</p>
+  <p class="msg" id="sMsg" hidden></p>
+</section>
+</div>
 </main>
 
 <dialog id="dlg" aria-labelledby="dlgT">
@@ -411,6 +455,81 @@ dialog h2{font-size:1.1rem;margin:0 0 4px}
   document.addEventListener("visibilitychange",function(){if(!document.hidden&&mode==="sheet")load()});
 
   paintGauge();syncPlace();render();load();
+})();
+</script>
+<script>
+/* ---- 存貨與補貨提醒：只存在這個瀏覽器（localStorage: protein-stock-v1） ---- */
+(function(){
+  var $=function(id){return document.getElementById(id)};
+  var KEY="protein-stock-v1", DAY=86400000;
+  var st={per:1,alert:14,date:"",items:[]};
+  try{var o=JSON.parse(localStorage.getItem(KEY)||"null");if(o&&Array.isArray(o.items)){st.per=o.per>0?o.per:1;st.alert=o.alert>0?o.alert:14;st.date=o.date||"";st.items=o.items}}catch(e){}
+  function save(){try{localStorage.setItem(KEY,JSON.stringify(st))}catch(e){}}
+  function today(){var d=new Date();d.setHours(0,0,0,0);return d}
+  function iso(d){var z=function(v){return(v<10?"0":"")+v};return d.getFullYear()+"-"+z(d.getMonth()+1)+"-"+z(d.getDate())}
+  function show(d){var z=function(v){return(v<10?"0":"")+v};return d.getFullYear()+"/"+z(d.getMonth()+1)+"/"+z(d.getDate())}
+  function fmt(x){return Math.round(x*10)/10}
+  /* 不自動扣：份數只在你按「喝了 1 份」或自己改數字時變動；天數只是用每天份數推估 */
+  function current(){return st.items.map(function(it){return{id:it.id,name:it.name,left:it.left}})}
+  function rebase(){st.date=iso(today())}
+  function msg(t,ok){$("sMsg").textContent=t||"";$("sMsg").hidden=!t;$("sMsg").style.color=ok?"var(--good)":""}
+  function el(tag,cls,text){var e=document.createElement(tag);if(cls)e.className=cls;if(text!==undefined)e.textContent=text;return e}
+  function render(){
+    var cur=current(),total=cur.reduce(function(a,b){return a+b.left},0);
+    var days=st.per>0?total/st.per:0,end=new Date(today().getTime()+Math.floor(days)*DAY);
+    var box=$("sSum");box.innerHTML="";
+    if(!st.items.length){box.appendChild(el("span","note","還沒有存貨。在下面加入你手上的高蛋白。"))}
+    else{
+      var cls=days<=st.alert?"low":days<=st.alert*2?"warn":"ok";
+      var word=days<=0?"已經喝完了，該補貨了":days<=st.alert?"該補貨了":days<=st.alert*2?"快要補貨，可以開始比價":"存量充足";
+      box.appendChild(el("span","note","全部合計約 "+fmt(total)+" 份，每天 "+st.per+" 份"));
+      box.appendChild(el("span","big2 "+cls,"還能喝約 "+Math.floor(days)+" 天"));
+      box.appendChild(el("span",cls,word+(days>0?"（預計 "+show(end)+" 喝完）":"")));
+    }
+    var ol=$("sList");ol.innerHTML="";
+    cur.forEach(function(it,i){
+      var li=el("li");var l=el("div");
+      l.appendChild(el("div","nm",it.name));
+      if(it.left<=0)l.appendChild(el("div","meta","喝完了"));
+      else{var pk=el("button","pick","− 喝了 1 份");pk.type="button";pk.setAttribute("aria-label",it.name+" 喝了 1 份");
+        pk.onclick=function(){rebase();st.items[i].left=Math.max(0,st.items[i].left-1);save();render();msg("已從「"+it.name+"」扣 1 份。",1)};l.appendChild(pk)}
+      var inp=el("input");inp.type="number";inp.min="0";inp.step="any";inp.value=fmt(it.left);inp.setAttribute("aria-label",it.name+" 剩下份數");
+      inp.onchange=function(){var v=parseFloat(inp.value);if(!(v>=0)){render();return}rebase();st.items[i].left=v;save();render()};
+      var d=el("button","ghost","刪除");d.type="button";d.setAttribute("aria-label","刪除 "+it.name);
+      d.onclick=function(){rebase();st.items.splice(i,1);save();render()};
+      var unit=el("span","meta","份");
+      var w=el("div");w.style.display="flex";w.style.alignItems="center";w.style.gap="4px";w.appendChild(inp);w.appendChild(unit);
+      li.appendChild(l);li.appendChild(w);li.appendChild(d);ol.appendChild(li);
+    });
+  }
+  function names(){
+    var dl=$("sNames");dl.innerHTML="";var seen={};
+    [].forEach.call(document.querySelectorAll("#list li .nm"),function(n){var t=n.textContent.trim();if(t&&!seen[t]){seen[t]=1;var o=document.createElement("option");o.value=t;dl.appendChild(o)}});
+  }
+  $("sPer").value=st.per;$("sAlert").value=st.alert;
+  $("sPer").addEventListener("change",function(){var v=parseFloat(this.value);if(!(v>0)){this.value=st.per;return}rebase();st.per=v;save();render()});
+  $("sAlert").addEventListener("change",function(){var v=parseInt(this.value,10);if(!(v>0)){this.value=st.alert;return}st.alert=v;save();render()});
+  $("sName").addEventListener("focus",names);
+  $("sAdd").addEventListener("click",function(){
+    var n=$("sName").value.trim(),v=parseFloat($("sLeft").value);
+    if(!n){msg("請填品名。");return}if(!(v>0)){msg("請填剩下幾份（大於 0）。");return}
+    msg("");rebase();var nid="s"+Date.now().toString(36);st.items.push({id:nid,name:n.slice(0,40),left:v});
+    save();
+    $("sName").value="";$("sLeft").value="";render();
+  });
+  render();
+
+  /* ---- 分頁切換：網址 #stock 直接打開存貨頁 ---- */
+  function go(tab){
+    var stock=tab==="stock";
+    $("pgCalc").hidden=stock;$("pgStock").hidden=!stock;
+    $("tabCalc").setAttribute("aria-selected",String(!stock));$("tabStock").setAttribute("aria-selected",String(stock));
+    if(stock)render();
+    try{history.replaceState(null,"",stock?"#stock":location.pathname+location.search)}catch(e){}
+  }
+  $("tabCalc").addEventListener("click",function(){go("calc")});
+  $("tabStock").addEventListener("click",function(){go("stock")});
+  go(location.hash==="#stock"?"stock":"calc");
 })();
 </script>
 </body>
