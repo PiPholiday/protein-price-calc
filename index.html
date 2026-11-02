@@ -204,7 +204,9 @@ dialog h2{font-size:1.1rem;margin:0 0 4px}
   var $=function(id){return document.getElementById(id)};
   /* 共用試算表的網址（Apps Script 網頁應用程式，結尾是 /exec）。留空就只存在這個瀏覽器。 */
   var SHEET_URL="https://script.google.com/macros/s/AKfycbzdhkVWg1aP_CiGA1RFNes9776zaHOhubef7XbWuTBdZshfG27r2zUBSAjJ0U0KbMnYsw/exec";
-  var LKEY="protein-compare-v1", SKEY="protein-settings-v1", DEF={"豆漿":[1.2,1.05,0.9,0.75],"濃縮乳清":[0.9,0.8,0.7,0.6],"分離乳清":[0.75,0.65,0.55,0.45],"水解乳清":[0.55,0.45,0.4,0.35]};
+  var LKEY="protein-compare-v1", SKEY="protein-settings-v1", DEF={"豆漿":[1.2,1.05,0.9,0.75],"濃縮乳清":[0.75,0.68,0.55,0.5],"分離乳清":[0.5,0.45,0.38,0.33],"水解乳清":[0.45,0.4,0.33,0.28]};
+  /* 2026/11/02 依市價（台灣蛋白粉比價）調整預設門檻；瀏覽器裡存的若還是舊預設，自動換成新的 */
+  var OLDDEF={"濃縮乳清":"0.9,0.8,0.7,0.6","分離乳清":"0.75,0.65,0.55,0.45","水解乳清":"0.55,0.45,0.4,0.35"};
   var cats=["豆漿","濃縮乳清","分離乳清","水解乳清"], places=["蝦皮","momo","酷澎","全聯","Costco"];
   function copyDef(){var o={};cats.forEach(function(c){o[c]=DEF[c].slice()});return o}
   function okT(t){return Array.isArray(t)&&t.length===4&&t.every(function(x){return x>0})&&t[0]>t[1]&&t[1]>t[2]&&t[2]>t[3]}
@@ -212,7 +214,7 @@ dialog h2{font-size:1.1rem;margin:0 0 4px}
   var mode="local", canWrite=true, localItems=[];
 
   try{var ss=JSON.parse(localStorage.getItem(SKEY)||"null");
-    if(ss){if(ss.cup>0)S.cup=ss.cup;if(ss.tc)cats.forEach(function(c){if(okT(ss.tc[c]))S.tc[c]=ss.tc[c]})}}catch(e){}
+    if(ss){if(ss.cup>0)S.cup=ss.cup;if(ss.tc)cats.forEach(function(c){if(okT(ss.tc[c])&&ss.tc[c].join(",")!==OLDDEF[c])S.tc[c]=ss.tc[c]})}}catch(e){}
   function th(cat){return S.tc[cat]||S.tc["濃縮乳清"]}
   try{localItems=(JSON.parse(localStorage.getItem(LKEY)||"[]")||[]).map(norm)}catch(e){localItems=[]}
   items=localItems;
